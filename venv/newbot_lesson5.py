@@ -93,9 +93,15 @@ def goto_menu(chat_id, name_menu):
             text_game=game21.get_cards(2)
             bot.send_media_group(chat_id,media=getMediaCards(game21))
             bot.send_message(chat_id,text=text_game)
-        return True
-    else:
-        return False
+            return True
+        if target_menu.name=="Камень,ножницы,бумага":
+            global rps
+            rps=BotGames.RockPaperScissors()
+            text_game=rps.print_score()
+            bot.send_message(chat_id,text=text_game)
+            return True
+        else:
+            return False
 
 def getMediaCards(game21):
     medias=[]

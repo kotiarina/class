@@ -78,7 +78,7 @@ class Game21:
             self.score=0
             self.status=None
     def new_pack(self,deck_count):
-        response=requests.get(f"https://deckofcardapi.com/api/deck/new/shuffle/?deck_count={deck_count}")
+        response=requests.get(f"https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count={deck_count}")
         if response.status_code!=200:
             return None
         pack_card=response.json()
@@ -94,6 +94,7 @@ class Game21:
             requests.get(f"https://deckofcardsapi.com/api/deck/{deck_id}/draw/?count={card_count}")
         if response.status_code!=200:
             return False
+        new_cards=response.json()
         if new_cards["success"]!=True:
             return False
         self.remaining=new_cards["remaining"]
