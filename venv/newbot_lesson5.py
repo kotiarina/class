@@ -7,8 +7,10 @@ import BotGames
 from menuBot import Menu
 import DZ
 import bs4
+import time
 
-bot = telebot.TeleBot('5160152364:AAFQCGToseFHTF5wJn_t2ltokHu-Z090wf0') 
+bot = telebot.TeleBot('5160152364:AAFQCGToseFHTF5wJn_t2ltokHu-Z090wf0')
+
 game21=None
 @bot.message_handler(commands="start")
 def command(message,res=False):
@@ -144,3 +146,8 @@ def get_ManOrNot(chat_id):
         bot.send_photo(chat_id,photo=img,reply_markup=markup,caption="Этот человек реален?")
 bot.polling(none_stop=True,interval=0)
 print()
+
+
+
+
+
