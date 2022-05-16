@@ -1,153 +1,207 @@
-import  json
-from  io import  BytesIO
-import telebot
+# Телеграм-бот v.004
+
+import telebot  # pyTelegramBotAPI 4.3.1
 from telebot import types
-import requests
-import BotGames
-from menuBot import Menu
-import DZ
-import bs4
-import time
+import botGames  # бот-игры, файл botGames.py
+import menuBot
+from menuBot import Menu  # в этом модуле есть код, создающий экземпляры классов описывающих моё меню
+import DZ  # домашнее задание от первого урока
+import fun  # развлечения
 
-bot = telebot.TeleBot('5160152364:AAFQCGToseFHTF5wJn_t2ltokHu-Z090wf0')
 
-game21=None
+bot = telebot.TeleBot('5160152364:AAFQCGToseFHTF5wJn_t2ltokHu-Z090wf0')  # Созм экземпляр бота
+
+
+# -----------------------------------------------------------------------
+# Функция, обрабатывающая команды
 @bot.message_handler(commands="start")
-def command(message,res=False):
-    txt_message=f"Привет,{message.from_user.first_name}! Я тестовый бот" \
-                f"для курас программирования Python"
-    bot.send_message(message.chat.id,text=txt_message,
-                     reply_markup=Menu.getMenu("Главное меню").markup)
+def command(message):
+    chat_id = message.chat.id
+    bot.send_sticker(chat_id, "CAACAgIAAxkBAAIaeWJEeEmCvnsIzz36cM0oHU96QOn7AAJUAANBtVYMarf4xwiNAfojBA")
+    txt_message = f"Привет, {message.from_user.first_name}! Я тестовый бот для курса программирования на языке Python"
+    bot.send_message(chat_id, text=txt_message, reply_markup=Menu.getMenu(chat_id, "Главное меню").markup)
 
+
+# -----------------------------------------------------------------------
+# Получение стикеров от юзера
+@bot.message_handler(content_types=['sticker'])
+def get_messages(message):
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "Это " + message.content_type)
+
+    sticker = message.sticker
+    bot.send_message(message.chat.id, sticker)
+
+    # глубокая инспекция объекта
+    # import inspect,pprint
+    # i = inspect.getmembers(sticker)
+    # pprint.pprint(i)
+
+
+# -----------------------------------------------------------------------
+# Получение аудио от юзера
+@bot.message_handler(content_types=['audio'])
+def get_messages(message):
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "Это " + message.content_type)
+
+    audio = message.audio
+    bot.send_message(chat_id, audio)
+
+
+# -----------------------------------------------------------------------
+# Получение голосовухи от юзера
+@bot.message_handler(content_types=['voice'])
+def get_messages(message):
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "Это " + message.content_type)
+
+    voice = message.voice
+    bot.send_message(message.chat.id, voice)
+
+
+# -----------------------------------------------------------------------
+# Получение фото от юзера
+@bot.message_handler(content_types=['photo'])
+def get_messages(message):
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "Это " + message.content_type)
+
+    photo = message.photo
+    bot.send_message(message.chat.id, photo)
+
+
+# -----------------------------------------------------------------------
+# Получение видео от юзера
+@bot.message_handler(content_types=['video'])
+def get_messages(message):
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "Это " + message.content_type)
+
+    video = message.video
+    bot.send_message(message.chat.id, video)
+
+
+# -----------------------------------------------------------------------
+# Получение документов от юзера
+@bot.message_handler(content_types=['document'])
+def get_messages(message):
+    chat_id = message.chat.id
+    mime_type = message.document.mime_type
+    bot.send_message(chat_id, "Это " + message.content_type + " (" + mime_type + ")")
+
+    document = message.document
+    bot.send_message(message.chat.id, document)
+    if message.document.mime_type == "video/mp4":
+        bot.send_message(message.chat.id, "This is a GIF!")
+
+
+# -----------------------------------------------------------------------
+# Получение координат от юзера
+@bot.message_handler(content_types=['location'])
+def get_messages(message):
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "Это " + message.content_type)
+
+    location = message.location
+    bot.send_message(message.chat.id, location)
+
+    from Weather import WeatherFromPyOWN
+    pyOWN = WeatherFromPyOWN()
+    bot.send_message(chat_id, pyOWN.getWeatherAtCoords(location.latitude, location.longitude))
+    bot.send_message(chat_id, pyOWN.getWeatherForecastAtCoords(location.latitude, location.longitude))
+
+
+# -----------------------------------------------------------------------
+# Получение контактов от юзера
+@bot.message_handler(content_types=['contact'])
+def get_messages(message):
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "Это " + message.content_type)
+
+    contact = message.contact
+    bot.send_message(message.chat.id, contact)
+
+
+# -----------------------------------------------------------------------
+# Получение сообщений от юзера
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
-    global game21
     chat_id = message.chat.id
     ms_text = message.text
 
-    result=goto_menu(chat_id,ms_text)
-    if result:
-        return
-    if Menu.cur_menu != None and ms_text in Menu.cur_menu.buttons:
-        if ms_text == "Помощь":
-            send_help(chat_id)
-        elif ms_text == "Прислать собаку":
-            bot.send_photo(chat_id, photo=get_dogURL(), caption="Вот тебе собачка")
-        elif ms_text == "Прислать гороскоп":
-            bot.send_message(chat_id, text=get_goroskop())
-        elif ms_text == "Угадай кто?":
-            get_ManOrNot(chat_id)
-        elif ms_text == "Карту!":
-            if game21 == None:  # если мы случайно попали в Это меню, а объекта
-                goto_menu(chat_id, "Выход")
-                return
+    cur_user = menuBot.Users.getUser(chat_id)
+    if cur_user is None:
+        cur_user = menuBot.Users(chat_id, message.json["from"])
 
-            text_game = game21.get_cards(1)
-            bot.send_media_group(chat_id, media=getMediaCards(game21))
+    # проверка = мы нажали кнопку подменю, или кнопку действия
+    subMenu = menuBot.goto_menu(bot, chat_id, ms_text)  # попытаемся использовать текст как команду меню, и войти в него
+    if subMenu is not None:
+        # Проверим, нет ли обработчика для самого меню. Если есть - выполним нужные команды
+        if subMenu.name == "Игра в 21":
+            game21 = botGames.newGame(chat_id, botGames.Game21(jokers_enabled=True))  # создаём новый экземпляр игры
+            text_game = game21.get_cards(2)  # просим 2 карты в начале игры
+            bot.send_media_group(chat_id, media=game21.mediaCards)  # получим и отправим изображения карт
             bot.send_message(chat_id, text=text_game)
-            if game21.status != None:
-                goto_menu(chat_id, "Выход")
-                return
-        elif ms_text == "Стоп!":
-            game21 = None
-            goto_menu(chat_id, "Выход")
-            return
-        elif ms_text == "Задание-1":
-            DZ.dz1(bot, chat_id)
 
-        elif ms_text == "Задание-2":
-            DZ.dz2(bot, chat_id)
+        elif subMenu.name == "Игра КНБ":
+            gameRPS = botGames.newGame(chat_id, botGames.GameRPS())  # создаём новый экземпляр игры и регистрируем его
+            bot.send_photo(chat_id, photo=gameRPS.url_picRules, caption=gameRPS.text_rules, parse_mode='HTML')
 
-        elif ms_text == "Задание-3":
-            DZ.dz3(bot, chat_id)
+        return  # мы вошли в подменю, и дальнейшая обработка не требуется
 
-        elif ms_text == "Задание-4":
-            DZ.dz4(bot, chat_id)
+    # проверим, является ли текст текущий команды кнопкой действия
+    cur_menu = Menu.getCurMenu(chat_id)
+    if cur_menu is not None and ms_text in cur_menu.buttons:  # проверим, что команда относится к текущему меню
+        module = cur_menu.module
 
-        elif ms_text == "Задание-5":
-            DZ.dz5(bot, chat_id)
+        if module != "":  # проверим, есть ли обработчик для этого пункта меню в другом модуле, если да - вызовем его (принцип инкапсуляции)
+            exec(module + ".get_text_messages(bot, cur_user, message)")
 
-        elif ms_text == "Задание-6":
-            DZ.dz6(bot, chat_id)
-    else:
-        bot.send_message(chat_id, text="Мне жаль,я не понимаю вашу команду:" + ms_text)
-        goto_menu(chat_id, "Главное меню")
+        if ms_text == "Помощь":
+            send_help(bot, chat_id)
+
+    else:  # ======================================= случайный текст
+        bot.send_message(chat_id, text="Мне жаль, я не понимаю вашу команду: " + ms_text)
+        menuBot.goto_menu(bot, chat_id, "Главное меню")
 
 
+# -----------------------------------------------------------------------
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):
-    if call.data == "ManOrNot_GoToSite":
-        import webbrowser
-        webbrowser.open("https://vc.ru/dev/58543-thispersondoesnotexist-sayt-generator-realistichnyh-lic")
-        bot.answer_callback_query(call)
+    # если требуется передать один или несколько параметров в обработчик кнопки,
+    # используйте методы Menu.getExtPar() и Menu.setExtPar()
+    # call.data это callback_data, которую мы указали при объявлении InLine-кнопки
+    # После обработки каждого запроса вызовете метод answer_callback_query(), чтобы Telegram понял, что запрос обработан
+    chat_id = call.message.chat.id
+    message_id = call.message.id
+    cur_user = menuBot.Users.getUser(chat_id)
+    if cur_user is None:
+        cur_user = menuBot.Users(chat_id, call.message.json["from"])
+
+    tmp = call.data.split("|")
+    menu = tmp[0] if len(tmp) > 0 else ""
+    cmd = tmp[1] if len(tmp) > 1 else ""
+    par = tmp[2] if len(tmp) > 2 else ""
+
+    if menu == "GameRPSm":
+        botGames.callback_worker(bot, cur_user, cmd, par, call)  # обработчик кнопок игры находится в модули игры
 
 
-def goto_menu(chat_id, name_menu):
-    if name_menu == "Выход" and Menu.cur_menu != None and Menu.cur_menu.parent != None:
-        target_menu = Menu.getMenu(Menu.cur_menu.parent.name)
-    else:
-        target_menu = Menu.getMenu(name_menu)
-    if target_menu != None:
-        bot.send_message(chat_id,text=target_menu.name,reply_markup=target_menu.markup)
-        if target_menu.name=="Игра в 21":
-            global game21
-            game21=BotGames.Game21()
-            text_game=game21.get_cards(2)
-            bot.send_media_group(chat_id,media=getMediaCards(game21))
-            bot.send_message(chat_id,text=text_game)
-            return True
-        if target_menu.name=="Камень,ножницы,бумага":
-            global rps
-            rps=BotGames.RockPaperScissors()
-            text_game=rps.print_score()
-            bot.send_message(chat_id,text=text_game)
-            return True
-        else:
-            return False
-
-def getMediaCards(game21):
-    medias=[]
-    for url in game21.arr_cards_URL:
-        medias.append(types.InputMediaPhoto(url))
-    return medias
-def send_help(chat_id):
-    global bot
-    bot.send_message(chat_id,"Автор:Скоробогатова Екатерина под руководством Швец А.Ю.")
-    markup=types.InlineKeyboardMarkup()
-    btn1=types.InlineKeyboardButton(text="Напишите автору",url="https://t.me/Ikatirin")
+# -----------------------------------------------------------------------
+def send_help(bot, chat_id):
+    bot.send_message(chat_id, "Автор:   Скоробогатова Екатерина")
+    markup = types.InlineKeyboardMarkup()
+    btn1 = types.InlineKeyboardButton(text="Напишите автору", url="https://t.me/Ikatirin")
     markup.add(btn1)
-    img=open("1-МД-5_Скоробогатова_Екатерина.jpg","rb")
-    bot.send_photo(chat_id,img,reply_markup=markup)
+    img = open("1-МД-5_Скоробогатова_Екатерина.jpg", 'rb')
+    bot.send_photo(chat_id, img, reply_markup=markup)
 
-def get_goroskop():
-    array_goroskop = []
-    z = ''
-    s = requests.get('https://horo.mail.ru/prediction/pisces/today/')
-    soup = bs4.BeautifulSoup(s.text, "html.parser")
-    result_find = soup.select('.article__text')
-    for result in result_find:
-        array_goroskop.append(result.getText().strip())
-    return array_goroskop[0]
-def get_dogURL():
-    url=""
-    req=requests.get('https://random.dog/woof.json')
-    if req.status_code==200:
-        r_json=req.json()
-        url=r_json['url']
-    return url
-def get_ManOrNot(chat_id):
-    global bot
-    markup=types.InlineKeyboardMarkup()
-    btn1=types.InlineKeyboardButton(text="Проверить",callback_data='ManOrNot_GoToSite')
-    markup.add(btn1)
-    req=requests.get("https://thispersondoesnotexist.com/image",allow_redirects=True)
-    if req.status_code==200:
-        img=BytesIO(req.content)
-        bot.send_photo(chat_id,photo=img,reply_markup=markup,caption="Этот человек реален?")
-bot.polling(none_stop=True,interval=0)
-print()
+    bot.send_message(chat_id, "Активные пользователи чат-бота:")
+    for el in menuBot.Users.activeUsers:
+        bot.send_message(chat_id, menuBot.Users.activeUsers[el].getUserHTML(), parse_mode='HTML')
+
+# ---------------------------------------------------------------------
 
 
-
-
-
+bot.polling(none_stop=True, interval=0)  # Запускаем бота
