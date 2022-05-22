@@ -2,6 +2,8 @@ import requests
 import bs4  # BeautifulSoup4
 from telebot import types
 from io import BytesIO
+import urllib3
+import time
 
 # -----------------------------------------------------------------------
 def get_text_messages(bot, cur_user, message):
@@ -27,6 +29,11 @@ def get_text_messages(bot, cur_user, message):
 
     elif ms_text == "Прислать курсы":
         bot.send_message(chat_id, text=get_cur())
+    elif ms_text=="Прислать карту звёздного неба":
+        bot.send_photo(chat_id,photo=get_nasa(),caption="Вот тебе звёздочки")
+
+    elif ms_text=='МКС online':
+        bot.send_message(chat_id,text=get_mks())
 
 
 
@@ -120,7 +127,18 @@ def get_cur():
         txt_curses = req_currency_rates.text
     return txt_curses
 
-# -----------------------------------------------------------------------
+# ------------------- ----------------------------------------------------
+def get_nasa():
+     req=requests.get('https://api.nasa.gov/planetary/apod?api_key=BVWTYELH5NTraKdLrjXJN3zB7F0oozq0MkdeM9OU')
+     url=''
+     r_json = req.json()
+     url = r_json['url']
+     return url
+def get_mks():
+    req = requests.get("http://api.open-notify.org/iss-now.json")
+    obj = req.json()
+    tim=time.ctime(int(obj['timestamp']))
+    return obj['iss_position']['latitude']+'   '+ obj['iss_position']['longitude']+'   '+tim
 def get_ManOrNot(bot, chat_id):
 
     markup = types.InlineKeyboardMarkup()

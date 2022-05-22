@@ -424,7 +424,6 @@ class GameRPS_Multiplayer:
         except:
             pass
 
-
 # -----------------------------------------------------------------------
 def callback_worker(bot, cur_user, cmd, par, call):
     chat_id = call.message.chat.id
@@ -518,6 +517,5 @@ def get_text_messages(bot, cur_user, message):
         bot.send_message(chat_id, "Вы хотите начать новую игру, или присоединиться к существующей?", reply_markup=keyboard)
 
 
-# -----------------------------------------------------------------------
 if __name__ == "__main__":
     print("Этот код должен использоваться ТОЛЬКО в качестве модуля!")
