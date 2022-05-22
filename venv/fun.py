@@ -29,8 +29,8 @@ def get_text_messages(bot, cur_user, message):
 
     elif ms_text == "Прислать курсы":
         bot.send_message(chat_id, text=get_cur())
-    elif ms_text=="Прислать карту звёздного неба":
-        bot.send_photo(chat_id,photo=get_nasa(),caption="Вот тебе звёздочки")
+    elif ms_text=="Прислать снимок Nasa":
+        bot.send_photo(chat_id,photo=get_nasa(),caption="Держи")
 
     elif ms_text=='МКС online':
         bot.send_message(chat_id,text=get_mks())
