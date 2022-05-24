@@ -32,7 +32,7 @@ keyboard.row(telebot.types.InlineKeyboardButton('1',callback_data='1'),
 			 telebot.types.InlineKeyboardButton('3',callback_data='3'),
 			 telebot.types.InlineKeyboardButton('+',callback_data='+'))
 
-keyboard.row(telebot.types.InlineKeyboardButton(' ',callback_data='no'),
+keyboard.row(telebot.types.InlineKeyboardButton('00',callback_data='00'),
 			 telebot.types.InlineKeyboardButton('0',callback_data='0'),
 			 telebot.types.InlineKeyboardButton(',',callback_data='.'),
 			 telebot.types.InlineKeyboardButton('=',callback_data='='))
